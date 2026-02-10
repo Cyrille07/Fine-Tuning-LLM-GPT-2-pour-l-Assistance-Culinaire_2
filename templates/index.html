@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>LLM Assistant Cuisine</title>
+
+  <!-- Google Font (propre et moderne) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    body{
+      margin:0;
+      font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:#0f172a;
+      background: url("/static/assets/plats_zelda.png") no-repeat center center fixed;
+      background-size: cover;
+    }
+
+    /* voile léger pour lisibilité */
+    .overlay{
+      min-height:100vh;
+      background: rgba(0,0,0,0.18);
+      display:flex;
+      justify-content:center;
+      padding: 32px 16px;
+      box-sizing:border-box;
+    }
+
+    .container{
+      width: min(980px, 100%);
+      display:grid;
+      gap:16px;
+    }
+
+    /* cartes quasi opaques */
+    .card{
+      background: rgba(255,255,255,0.96);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+
+    h1{
+      margin:0 0 8px 0;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .muted{
+      color:#334155;
+    }
+
+    label{
+      display:block;
+      font-weight:700;
+      margin:10px 0 6px;
+    }
+
+    textarea, input{
+      width:100%;
+      box-sizing:border-box;
+      padding:10px;
+      border-radius:12px;
+      border:1px solid rgba(15,23,42,0.15);
+      font-size:14px;
+      outline:none;
+      background: rgba(255,255,255,0.92);
+    }
+
+    textarea{
+      min-height:90px;
+      resize:vertical;
+    }
+
+    .row{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+
+    button{
+      padding: 12px 14px;
+      border:0;
+      border-radius: 12px;
+      background:#0f172a;
+      color:#fff;
+      font-weight:800;
+      cursor:pointer;
+    }
+
+    button:disabled{
+      opacity:0.6;
+      cursor:not-allowed;
+    }
+
+    pre{
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      background: rgba(248,250,252,0.95);
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid rgba(15,23,42,0.10);
+      margin: 0;
+      min-height: 120px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+    }
+
+    ul{
+      margin:8px 0 0 18px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="overlay">
+    <div class="container">
+
+      <!-- BIENVENUE -->
+      <div class="card">
+        <h1>🍲 Bienvenue sur <b>LLM Assistant Cuisine</b></h1>
+        <p class="muted">Vous avez faim ? Demandez-lui :</p>
+        <ul>
+          <li><b>Un plat préféré</b> (ex : “Donne moi les ingrédients pour un burger”)</li>
+          <li><b>Un dessert préféré</b> (ex : “Quels sont les ingrédients pour une Tarte aux pommes”)</li>
+          <li><b>Conversion</b> : L / mL / cL et kg / g</li>
+          <li><b>Mode de cuisson</b> : étapes claires + conseils</li>
+        </ul>
+      </div>
+
+      <!-- FORMULAIRE -->
+      <div class="card">
+        <label for="instruction">Instruction</label>
+        <textarea id="instruction" placeholder="Ex : Donne-moi une recette de riz au curry pour 2 personnes"></textarea>
+
+        <div class="row">
+          <div>
+            <label for="max_new_tokens">Max new tokens</label>
+            <input id="max_new_tokens" type="number" value="60" min="1" max="400"/>
+          </div>
+          <div>
+            <label for="seed">Seed (optionnel)</label>
+            <input id="seed" type="number" value="123"/>
+          </div>
+        </div>
+
+        <div style="margin-top:12px; display:flex; gap:10px;">
+          <button id="btn" onclick="generate()">Générer</button>
+          <span id="status" class="muted" style="align-self:center;"></span>
+        </div>
+      </div>
+
+      <!-- RÉPONSE -->
+      <div class="card">
+        <label>Réponse</label>
+        <pre id="output"></pre>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    async function generate(){
+      const btn = document.getElementById("btn");
+      const status = document.getElementById("status");
+      const output = document.getElementById("output");
+
+      const instruction = document.getElementById("instruction").value;
+      const max_new_tokens = document.getElementById("max_new_tokens").value;
+      const seed = document.getElementById("seed").value;
+
+      btn.disabled = true;
+      status.textContent = "Génération en cours...";
+      output.textContent = "";
+
+      try{
+        const res = await fetch("/api/generate", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({instruction, max_new_tokens, seed})
+        });
+
+        const data = await res.json();
+
+        if(!data.ok){
+          output.textContent = "Erreur : " + (data.error || "inconnue");
+        } else {
+          output.textContent = data.response || "";
+        }
+      } catch(e){
+        output.textContent = "Erreur réseau : " + e;
+      } finally {
+        status.textContent = "";
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
