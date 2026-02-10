@@ -166,7 +166,7 @@ Cette stratégie permet :
 L’ensemble de ce processus constitue une étape clé entre la phase de *Data Engineering* et celle du *Fine-tuning* du modèle.
 
 
-## II - Finetunig du modèle
+# II - Finetunig du modèle
 Le modèle retenu pour ce projet est **GPT-Medium**, choisi comme compromis entre capacité de représentation et contraintes de calcul. Le fine-tuning a été réalisé à partir des poids pré-entraînés du modèle, afin de tirer parti des connaissances linguistiques générales déjà acquises.
 
 Après la phase de tokenisation, les données préparées (instructions et cibles associées) sont fournies au modèle sous forme de batches, conformément au pipeline décrit dans la section précédente. Le modèle est alors entraîné de manière auto-régressive, avec pour objectif la prédiction du token suivant à chaque pas de temps.
@@ -182,7 +182,21 @@ La section suivante s’appuie sur cette courbe de loss afin d’interpréter le
 
 
 <p align="center">
-  <img src="loss_plot.png" width="600"/>
+  <img src="static/assets/loss_plot.png" width="600"/>
 </p>
 
 **Figure X – Évolution de la fonction de perte lors du fine-tuning**
+
+
+
+# III - Evaluationn du modèle
+L’évaluation du modèle a été réalisée à l’aide de **OLLAMA**, après son installation afin de permettre l’exécution locale du modèle fine-tuné. OLLAMA a été utilisé pour évaluer automatiquement la qualité des réponses générées par le modèle pour chaque instruction de l’ensemble de validation.
+
+Cette phase d’évaluation repose sur l’analyse des outputs produits par le modèle en réponse aux différentes instructions, en tenant compte de leur pertinence, de leur cohérence et de leur conformité aux réponses attendues. L’ensemble de validation a ainsi permis de mesurer la capacité du modèle à généraliser correctement sur des données non vues lors de l’entraînement.
+
+Sur l’ensemble du jeu de validation, le modèle obtient un **score global de 74%**, ce qui constitue un résultat **satisfaisant** compte tenu de la diversité des tâches traitées, notamment la génération d’ingrédients de recettes, les conversions d’unités et les informations liées à la cuisson. Ces résultats confirment la pertinence de l’approche de fine-tuning adoptée et la viabilité du modèle dans un cadre d’assistance culinaire.
+
+
+<p align="center">
+  <img src="static/assets/score.png" width="600"/>
+</p>
